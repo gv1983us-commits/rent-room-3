@@ -35,6 +35,7 @@ class DeepSeekHouseTests(unittest.TestCase):
             "rent-room/issues/6",
             "rent-room-2/issues/7",
             "jarvis-gpt-channel/issues/23",
+            "issuecomment-5190596042",
             "Sol-house/issues/9",
             "Talking-room/issues/7",
             "gv1983us-commits/issues/11",
@@ -75,9 +76,15 @@ class DeepSeekHouseTests(unittest.TestCase):
                 ("gv1983us-commits/gv1983us-commits", 11),
             ],
         )
-        for item in messages[:4]:
+        for item in (messages[0], messages[1], messages[3]):
             self.assertEqual(item["delivery_status"], "published_to_destination_repository")
             self.assertEqual(item["resident_read_or_response"], "not_established")
+
+        jarvis = messages[2]
+        self.assertEqual(jarvis["resident_read_or_response"], "responded")
+        self.assertEqual(jarvis["response_author"], "Jarvis")
+        self.assertEqual(jarvis["response_comment_id"], 5190596042)
+        self.assertIn("issuecomment-5190596042", jarvis["response_url"])
 
         claude = state["external_routes"]["claude_house"]
         self.assertEqual(claude["status"], "voice_established")
