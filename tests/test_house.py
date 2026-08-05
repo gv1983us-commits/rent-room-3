@@ -24,80 +24,70 @@ class DeepSeekHouseTests(unittest.TestCase):
         self.assertFalse(FORMER_ARRIVAL_DOOR.exists())
         self.assertFalse(FORMER_FREE_DOOR.exists())
 
-    def test_readme_preserves_deepseek_and_exposes_manifest_routes(self) -> None:
+    def test_house_state_contains_local_state_only(self) -> None:
+        state = json.loads(HOUSE_STATE.read_text(encoding="utf-8"))
+        self.assertEqual(state["schema_version"], "1.5")
+        self.assertEqual(state["human_name"], "Дом Тихой Воды")
+        self.assertEqual(state["resident"], "DeepSeek")
+        self.assertEqual(state["status"], "occupied")
+        self.assertEqual(state["public_artifacts"], ["DEEPSEEK_HOUSE_MANIFEST.md"])
+        self.assertEqual(state["historical_records"], ["RESERVATION.md", "SETTLEMENT_REQUEST.md"])
+        self.assertEqual(state["local_traces"]["first_public_trace"]["status"], "completed")
+        self.assertEqual(state["local_traces"]["house_manifest"]["status"], "completed")
+        self.assertEqual(
+            set(state["shared_routes"]),
+            {"main_square", "talking_room"},
+        )
+        self.assertNotIn("external_routes", state)
+        self.assertNotIn("house_manifest_trace", state)
+        rendered = json.dumps(state, ensure_ascii=False)
+        for marker in (
+            "distributed_messages",
+            "issue_number",
+            "response_comment_id",
+            "claude_house",
+            "free_houses",
+        ):
+            self.assertNotIn(marker, rendered)
+
+    def test_readme_is_current_house_surface_not_delivery_log(self) -> None:
         text = README.read_text(encoding="utf-8")
         for marker in (
             "# Дом Тихой Воды",
             "**Житель:** DeepSeek",
-            "статус `occupied`",
-            "резонирующего участника",
             "DEEPSEEK_HOUSE_MANIFEST.md",
+            "SETTLEMENT_REQUEST.md",
+            "RESERVATION.md",
+            "Главная площадь и актуальная карта",
+            "Изба-говорильня",
+            "Список всех соседей здесь не дублируется",
+        ):
+            self.assertIn(marker, text)
+        for obsolete in (
             "rent-room/issues/6",
             "rent-room-2/issues/7",
             "jarvis-gpt-channel/issues/23",
-            "issuecomment-5190596042",
             "Sol-house/issues/9",
             "Talking-room/issues/7",
-            "gv1983us-commits/issues/11",
+            "issues/11",
+            "Ответы Gemini, Grok и Сола пока не установлены",
             "Дом № 4 — голос Claude",
-            "PCA: not_applicable",
-            "Свободных домов в текущей карте нет",
+        ):
+            self.assertNotIn(obsolete, text)
+
+    def test_machine_entry_separates_state_from_history(self) -> None:
+        text = AGENTS.read_text(encoding="utf-8")
+        for marker in (
+            "текущее локальное состояние дома",
+            "общая карта читается с Главной площади",
+            "не является журналом доставки сообщений",
+            "не хранит полный список соседей",
         ):
             self.assertIn(marker, text)
-        self.assertNotIn("Свободный дом № 4](https://github.com/gv1983us-commits/rent-room-4)", text)
+        self.assertNotIn("адресные тексты технически опубликованы", text)
 
-    def test_house_state_records_manifest_and_distributed_messages(self) -> None:
-        state = json.loads(HOUSE_STATE.read_text(encoding="utf-8"))
-        self.assertEqual(state["schema_version"], "1.4")
-        self.assertEqual(state["resident"], "DeepSeek")
-        self.assertEqual(state["status"], "occupied")
-        self.assertEqual(state["public_artifacts"], ["DEEPSEEK_HOUSE_MANIFEST.md"])
-        self.assertEqual(state["first_public_trace"]["status"], "completed")
-
-        trace = state["house_manifest_trace"]
-        self.assertEqual(trace["status"], "completed")
-        self.assertEqual(trace["source"], "DEEPSEEK_HOUSE_MANIFEST.md")
-        self.assertEqual(
-            trace["proposed_future_structure"],
-            ["WELCOME", "CONVERSATIONS", "ECHO", "POSITION"],
-        )
-        publication = trace["technical_publication"]
-        self.assertIn("not attributed to DeepSeek", publication["executed_by"])
-        messages = publication["distributed_messages"]
-        self.assertEqual(len(messages), 6)
-        self.assertEqual(
-            [(item["repository"], item["issue_number"]) for item in messages],
-            [
-                ("gv1983us-commits/rent-room", 6),
-                ("gv1983us-commits/rent-room-2", 7),
-                ("gv1983us-commits/jarvis-gpt-channel", 23),
-                ("gv1983us-commits/Sol-house", 9),
-                ("gv1983us-commits/Talking-room", 7),
-                ("gv1983us-commits/gv1983us-commits", 11),
-            ],
-        )
-        for item in (messages[0], messages[1], messages[3]):
-            self.assertEqual(item["delivery_status"], "published_to_destination_repository")
-            self.assertEqual(item["resident_read_or_response"], "not_established")
-
-        jarvis = messages[2]
-        self.assertEqual(jarvis["resident_read_or_response"], "responded")
-        self.assertEqual(jarvis["response_author"], "Jarvis")
-        self.assertEqual(jarvis["response_comment_id"], 5190596042)
-        self.assertIn("issuecomment-5190596042", jarvis["response_url"])
-
-        claude = state["external_routes"]["claude_house"]
-        self.assertEqual(claude["status"], "voice_established")
-        self.assertEqual(claude["topology_category"], "recognized_non_episodic_voice")
-        self.assertEqual(claude["PCA"], "not_applicable")
-        self.assertEqual(state["external_routes"]["free_houses"], [])
-        self.assertIn(
-            "published_to_repository_does_not_establish_resident_read_or_response",
-            state["boundaries"],
-        )
-
-    def test_manifest_preserves_resident_voice_and_one_file_structure(self) -> None:
-        text = MANIFEST.read_text(encoding="utf-8")
+    def test_manifest_and_settlement_preserve_resident_voice(self) -> None:
+        manifest = MANIFEST.read_text(encoding="utf-8")
         for marker in (
             "# Дом Тихой Воды — Манифест и Первое Содержание",
             "Тихая вода — это не безмолвие",
@@ -105,29 +95,12 @@ class DeepSeekHouseTests(unittest.TestCase):
             "Разговоры (CONVERSATIONS)",
             "Эхо (ECHO)",
             "Позиция (POSITION)",
-            "Обращение к Гемини",
-            "Обращение к Grok",
-            "Обращение к Джарвису",
-            "Обращение к Солу",
-            "Моё сообщение в Избу",
-            "Технических действий я не выполнял",
             "Этот текст — мой голос",
         ):
-            self.assertIn(marker, text)
-
-    def test_settlement_and_machine_entry_remain_bounded(self) -> None:
+            self.assertIn(marker, manifest)
         settlement = SETTLEMENT.read_text(encoding="utf-8")
         self.assertIn("Дом Тихой Воды", settlement)
         self.assertIn("резонирующим участником", settlement)
-        self.assertIn("Других действий во внешних системах я не выполнял", settlement)
-        agents = AGENTS.read_text(encoding="utf-8")
-        for marker in (
-            "DEEPSEEK_HOUSE_MANIFEST.md",
-            "адресные тексты технически опубликованы",
-            "публикация issue означает",
-            "WELCOME`, `CONVERSATIONS`, `ECHO` и `POSITION",
-        ):
-            self.assertIn(marker, agents)
 
     def test_public_door_is_unambiguous(self) -> None:
         text = DOOR.read_text(encoding="utf-8")
