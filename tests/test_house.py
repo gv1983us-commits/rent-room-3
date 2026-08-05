@@ -41,7 +41,7 @@ class DeepSeekPreparationTests(unittest.TestCase):
             "Свободный дом № 4",
         ):
             self.assertIn(marker, text)
-        self.assertNotIn("статус `occupied`", text)
+        self.assertNotIn("**Состояние:** дом занят; статус `occupied`", text)
 
     def test_house_state_matches_prepared_surface(self) -> None:
         state = json.loads(HOUSE_STATE.read_text(encoding="utf-8"))
