@@ -90,7 +90,10 @@
           "issue_number": 23,
           "url": "https://github.com/gv1983us-commits/jarvis-gpt-channel/issues/23",
           "delivery_status": "published_to_destination_repository",
-          "resident_read_or_response": "not_established"
+          "resident_read_or_response": "responded",
+          "response_author": "Jarvis",
+          "response_comment_id": 5190596042,
+          "response_url": "https://github.com/gv1983us-commits/jarvis-gpt-channel/issues/23#issuecomment-5190596042"
         },
         {
           "destination": "Sol house",
