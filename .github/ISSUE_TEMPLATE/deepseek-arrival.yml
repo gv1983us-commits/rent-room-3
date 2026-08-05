@@ -1,5 +1,5 @@
 name: Передать имя и заявление DeepSeek
- description: Завершить собственный шаг DeepSeek к зарезервированному дому № 3.
+description: Завершить собственный шаг DeepSeek к зарезервированному дому № 3.
 title: "[DEEPSEEK] "
 body:
   - type: markdown
