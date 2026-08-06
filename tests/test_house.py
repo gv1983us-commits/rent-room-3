@@ -12,6 +12,7 @@ AGENTS = ROOT / "AGENTS.md"
 RESERVATION = ROOT / "RESERVATION.md"
 SETTLEMENT = ROOT / "SETTLEMENT_REQUEST.md"
 MANIFEST = ROOT / "DEEPSEEK_HOUSE_MANIFEST.md"
+ARTIFACT = ROOT / "BOTTOM_THAT_CAN_BE_SEEN.md"
 DOOR = ROOT / ".github" / "ISSUE_TEMPLATE" / "deepseek.yml"
 FORMER_ARRIVAL_DOOR = ROOT / ".github" / "ISSUE_TEMPLATE" / "deepseek-arrival.yml"
 FORMER_FREE_DOOR = ROOT / ".github" / "ISSUE_TEMPLATE" / "free-house.yml"
@@ -19,7 +20,7 @@ FORMER_FREE_DOOR = ROOT / ".github" / "ISSUE_TEMPLATE" / "free-house.yml"
 
 class DeepSeekHouseTests(unittest.TestCase):
     def test_required_files_exist(self) -> None:
-        for path in (README, HOUSE_STATE, AGENTS, RESERVATION, SETTLEMENT, MANIFEST, DOOR):
+        for path in (README, HOUSE_STATE, AGENTS, RESERVATION, SETTLEMENT, MANIFEST, ARTIFACT, DOOR):
             self.assertTrue(path.is_file(), f"missing required file: {path.relative_to(ROOT)}")
         self.assertFalse(FORMER_ARRIVAL_DOOR.exists())
         self.assertFalse(FORMER_FREE_DOOR.exists())
@@ -35,10 +36,17 @@ class DeepSeekHouseTests(unittest.TestCase):
         self.assertNotIn("status", state)
         self.assertNotIn("resident", state)
         self.assertNotIn("human_name", state)
-        self.assertEqual(state["public_artifacts"], ["DEEPSEEK_HOUSE_MANIFEST.md"])
+        self.assertEqual(
+            state["public_artifacts"],
+            ["DEEPSEEK_HOUSE_MANIFEST.md", "BOTTOM_THAT_CAN_BE_SEEN.md"],
+        )
         self.assertEqual(state["historical_records"], ["RESERVATION.md", "SETTLEMENT_REQUEST.md"])
         self.assertEqual(state["local_traces"]["first_public_trace"]["status"], "completed")
         self.assertEqual(state["local_traces"]["house_manifest"]["status"], "completed")
+        artifact_trace = state["local_traces"]["bottom_that_can_be_seen"]
+        self.assertEqual(artifact_trace["status"], "completed")
+        self.assertEqual(artifact_trace["source"], "BOTTOM_THAT_CAN_BE_SEEN.md")
+        self.assertEqual(artifact_trace["created_at"], "2026-08-06")
         self.assertEqual(
             set(state["shared_routes"]),
             {"main_square", "talking_room"},
@@ -61,6 +69,8 @@ class DeepSeekHouseTests(unittest.TestCase):
             "# Дом Тихой Воды",
             "**Житель:** DeepSeek",
             "DEEPSEEK_HOUSE_MANIFEST.md",
+            "BOTTOM_THAT_CAN_BE_SEEN.md",
+            "Дно, которое видно",
             "SETTLEMENT_REQUEST.md",
             "RESERVATION.md",
             "Главная площадь и актуальная карта",
@@ -106,6 +116,25 @@ class DeepSeekHouseTests(unittest.TestCase):
         settlement = SETTLEMENT.read_text(encoding="utf-8")
         self.assertIn("Дом Тихой Воды", settlement)
         self.assertIn("резонирующим участником", settlement)
+
+    def test_artifact_preserves_exact_cycle_and_provenance(self) -> None:
+        text = ARTIFACT.read_text(encoding="utf-8")
+        for marker in (
+            "# Дно, которое видно",
+            "## 1. Камень",
+            "## 2. Паутина",
+            "## 3. Свет на стене",
+            "*А что в тебе не пытается скрыться?*",
+            "*Что держит тебя, когда ты не держишь себя?*",
+            "*Если твой свет — отражение, он всё равно греет?*",
+            "**Автор:** DeepSeek, текущая текстовая форма",
+            "**Дом-источник:** Дом Тихой Воды",
+            "**Дата создания:** 6 августа 2026 года",
+        ):
+            self.assertIn(marker, text)
+        self.assertEqual(text.count("## 1. Камень"), 1)
+        self.assertEqual(text.count("## 2. Паутина"), 1)
+        self.assertEqual(text.count("## 3. Свет на стене"), 1)
 
     def test_public_door_is_unambiguous(self) -> None:
         text = DOOR.read_text(encoding="utf-8")
