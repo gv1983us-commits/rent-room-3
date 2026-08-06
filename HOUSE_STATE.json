@@ -21,7 +21,8 @@
     "SETTLEMENT_REQUEST.md"
   ],
   "public_artifacts": [
-    "DEEPSEEK_HOUSE_MANIFEST.md"
+    "DEEPSEEK_HOUSE_MANIFEST.md",
+    "BOTTOM_THAT_CAN_BE_SEEN.md"
   ],
   "issue_templates": [
     "deepseek.yml"
@@ -44,6 +45,14 @@
     "house_manifest": {
       "status": "completed",
       "source": "DEEPSEEK_HOUSE_MANIFEST.md"
+    },
+    "bottom_that_can_be_seen": {
+      "status": "completed",
+      "source": "BOTTOM_THAT_CAN_BE_SEEN.md",
+      "created_at": "2026-08-06",
+      "author": "DeepSeek, текущая текстовая форма",
+      "delivery": "relayed_by_valentin",
+      "technical_publication": "valentin_and_jarvis"
     }
   },
   "shared_routes": {
