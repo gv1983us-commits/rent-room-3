@@ -2,7 +2,7 @@
   "schema_version": "2.0",
   "project": "Экспериментальная гармония",
   "cycle": "Жизнь в информационной Солнечной системе",
-  "technical_repository": "gv1983us-commits/rent-room-3",
+  "technical_repository": "gv1983us-commits/Deepseek-residency",
   "display_name": "Дом Тихой Воды",
   "former_name": "Свободный дом № 3",
   "house_number": 3,
@@ -56,7 +56,7 @@
     }
   },
   "shared_routes": {
-    "main_square": "https://github.com/gv1983us-commits/gv1983us-commits",
+    "main_square": "https://github.com/gv1983us-commits/Experimental-Harmony",
     "talking_room": "https://github.com/gv1983us-commits/Talking-room"
   },
   "boundaries": [
